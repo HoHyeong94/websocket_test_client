@@ -1,23 +1,39 @@
-import { Button, TextField } from "@mui/material";
-import React, { useEffect, useRef } from "react";
-import { Socket } from "./websocket/index";
+import { Switch, Route, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { InitSocket, getSocket } from "./network/websocket";
+import ChatRoom from "./pages/chat";
+import HttpClient from "./network/http";
+import ChatService from "./service/chat";
+
+const baseURL = "http://localhost:8080";
+const httpClient = new HttpClient(baseURL);
+let chatService;
 
 function App() {
-  const inputRef = useRef();
-
-  function sendMsg() {}
-
+  const [isLoad, setLoaded] = useState(false);
   useEffect(() => {
-    Socket();
+    InitSocket().then(() => {
+      chatService = new ChatService(httpClient, getSocket());
+      setLoaded(true);
+    });
   }, []);
 
   return (
-    <React.Fragment>
-      <TextField fullWidth inputRef={inputRef} />
-      <Button fullWidth color="primary" onClick={sendMsg}>
-        send
-      </Button>
-    </React.Fragment>
+    <div>
+      {isLoad ? (
+        <Switch>
+          <Route exact path="/">
+            <h1>Home</h1>
+            <Link to="/chats">chat</Link>
+          </Route>
+          <Route path="/chats">
+            <ChatRoom chatService={chatService} />
+          </Route>
+        </Switch>
+      ) : (
+        <React.Fragment />
+      )}
+    </div>
   );
 }
 
