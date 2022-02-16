@@ -20,7 +20,7 @@ export default class HttpClient {
     
         if (res.status > 299 || res.status < 200) {
           const message =
-            data && data.message ? data.message : 'Something went wrong! 🤪';
+            data && data.message ? data.message : 'Something went wrong!';
           const error = new Error(message);
           throw error;
         }

@@ -1,5 +1,5 @@
-import { Button, TextField } from "@mui/material";
 import React, { useRef } from "react";
+import { Button, TextField } from "@mui/material";
 import { sendMessage } from "../network/websocket";
 
 function App({ roomname }) {
@@ -8,7 +8,8 @@ function App({ roomname }) {
   function sendMsg() {
     sendMessage(
       JSON.stringify({
-        id: 1,
+        type: "Message",
+        id: Math.floor(Math.random() * 10),
         roomname: roomname,
         text: inputRef.current.value,
       })

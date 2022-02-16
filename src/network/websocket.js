@@ -20,10 +20,8 @@ export async function InitSocket() {
     };
     
     _socket.onmessage = function(e) {
-        if (typeof e.data === 'string') {
-            testFunc(e.data);
-            console.log("Received: '" + e.data + "'");
-        }
+        // console.log(e.data)
+        testFunc(e.data);
     };
 }
 
@@ -32,7 +30,6 @@ export function getSocket() {
 }
 
 export function sendMessage(data) {
- 
     if (_socket.readyState === _socket.OPEN) {
         _socket.send(data);
     }

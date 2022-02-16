@@ -1,6 +1,8 @@
 import { List, ListItem, ListItemText } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { sendMessage } from "../network/websocket";
+import { userInfo } from "../Utils/auth";
 
 import ChatForm from "./chatForm";
 
@@ -11,9 +13,14 @@ export default function Main({ chatService }) {
   const { roomname } = useParams();
 
   useEffect(() => {
-    testFunc = (e) => {
-      setChats(prev => [...prev, JSON.parse(e)]);
+    testFunc = (data) => {
+      setChats(prev => [...prev, data]);
     }
+    sendMessage(JSON.stringify({
+      type: "Username",
+      roomname: roomname,
+      username: userInfo.username,
+    }))
   }, []);
 
   return (
@@ -22,7 +29,7 @@ export default function Main({ chatService }) {
         {chats.map((data, index) => {
           return (
             <ListItem key={index}>
-              <ListItemText primary={data.text} secondary={data.id} />
+              <ListItemText primary={data} />
             </ListItem>
           );
         })}

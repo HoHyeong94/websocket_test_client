@@ -1,13 +1,13 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
-import ChatList from "../components/chatList";
+import RoomList from "../components/roomList";
 import ChatRoom from "../components/chatRoom";
 
 export default function Main({ chatService }) {
   return (
     <Switch>
       <Route exact path="/chats">
-        <ChatList chatService={chatService} />
+        <RoomList chatService={chatService} />
       </Route>
       <Route exact path="/chats/:roomname">
         <ChatRoom chatService={chatService} />
