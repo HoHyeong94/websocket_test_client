@@ -1,32 +1,46 @@
-import { List, ListItem, ListItemText } from "@mui/material";
+import { List, ListItem, ListItemText, Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import { sendMessage } from "../network/websocket";
-import { userInfo } from "../Utils/auth";
+import { getUserID, getUsername } from "../Utils/auth";
 
 import ChatForm from "./chatForm";
 
-export let testFunc = () => {};
+export let setChats = () => {};
 
-export default function Main({ chatService }) {
-  const [chats, setChats] = useState([]);
+export default function Main() {
+  const [chatlists, setChatlists] = useState([]);
   const { roomname } = useParams();
+  const history = useHistory()
+
+  function sendExit() {
+    sendMessage(
+      JSON.stringify({
+        type: "exit",
+        userid: getUserID(),
+        username: getUsername(),
+        roomname: roomname,
+      })
+    );
+    history.goBack();
+  }
 
   useEffect(() => {
-    testFunc = (data) => {
-      setChats(prev => [...prev, data]);
-    }
     sendMessage(JSON.stringify({
-      type: "Username",
-      roomname: roomname,
-      username: userInfo.username,
+      type: "join",
+      userid: getUserID(),
+      username: getUsername(),
+      roomname: roomname
     }))
+    setChats = (data) => {
+      setChatlists(prev => [...prev, data]);
+    }
   }, []);
 
   return (
     <>
       <List>
-        {chats.map((data, index) => {
+        {chatlists.map((data, index) => {
           return (
             <ListItem key={index}>
               <ListItemText primary={data} />
@@ -35,6 +49,7 @@ export default function Main({ chatService }) {
         })}
       </List>
       <ChatForm roomname={roomname} />
+      <Button color="primary" onClick={sendExit}>exit</Button>
     </>
   );
 }

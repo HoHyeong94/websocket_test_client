@@ -18,7 +18,8 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "5.0.0",
     "web-vitals": "^2.1.4",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "zustand": "^3.7.0"
   },
   "scripts": {
     "start": "react-scripts start",

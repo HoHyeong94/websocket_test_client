@@ -1,5 +1,7 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { testFunc } from "../components/chatRoom";
+import { setChats } from "../components/chatRoom";
+import { setRoomLists } from "../components/roomList"
+import { getUsername, getUserID } from "../Utils/auth"
 
 
 let _socket;
@@ -13,15 +15,33 @@ export async function InitSocket() {
     
     _socket.onopen = function() {
         console.log('WebSocket Client Connected');
+        sendMessage(JSON.stringify({
+            type: "init",
+            username: getUsername(),
+            userid: getUserID()
+          }))
     };
     
     _socket.onclose = function() {
-        console.log('echo-protocol Client Closed');
+        console.log('WebSocket Client Closed');
     };
     
     _socket.onmessage = function(e) {
-        // console.log(e.data)
-        testFunc(e.data);
+        const data = JSON.parse(e.data)
+        console.log(data);
+        switch (data.type) {
+            case 'roomlist':
+                setRoomLists(data.data)
+                break;
+            case 'message':
+                console.log(data)
+                setChats(data.text)
+                break;
+            default:
+                console.log("Can't match Data type")
+                break;
+
+        }
     };
 }
 

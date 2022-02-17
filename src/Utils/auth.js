@@ -1,8 +1,16 @@
-export const userInfo = getUserInfo();
+import create from "zustand"
 
-export function getUserInfo() {
-    return {
-        type: "test",
-        username: Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5),
-    }
+export const userInfoStore = create(set => ({
+    username: null,
+    userID: null,
+    setUsername: (name) => set({ username: name }),
+    setUserID: (id) => set({userID: id})
+}))
+
+export function getUsername() {
+    return userInfoStore.getState().username;
+}
+
+export function getUserID() {
+    return userInfoStore.getState().userID;
 }

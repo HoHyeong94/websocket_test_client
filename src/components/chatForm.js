@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Button, TextField } from "@mui/material";
 import { sendMessage } from "../network/websocket";
+import { getUsername, getUserID } from "../Utils/auth";
 
 function App({ roomname }) {
   const inputRef = useRef();
@@ -8,8 +9,9 @@ function App({ roomname }) {
   function sendMsg() {
     sendMessage(
       JSON.stringify({
-        type: "Message",
-        id: Math.floor(Math.random() * 10),
+        type: "message",
+        userid: getUserID(),
+        username: getUsername(),
         roomname: roomname,
         text: inputRef.current.value,
       })
@@ -19,7 +21,7 @@ function App({ roomname }) {
   return (
     <React.Fragment>
       <TextField fullWidth inputRef={inputRef} />
-      <Button fullWidth color="primary" onClick={sendMsg}>
+      <Button color="primary" onClick={sendMsg}>
         send
       </Button>
     </React.Fragment>
