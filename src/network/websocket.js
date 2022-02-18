@@ -1,5 +1,5 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { setChats } from "../components/chatRoom";
+import { setChats, myPeerConnection } from "../components/chatRoom";
 import { setRoomLists } from "../components/roomList"
 import { getUsername, getUserID } from "../Utils/auth"
 
@@ -26,21 +26,49 @@ export async function InitSocket() {
         console.log('WebSocket Client Closed');
     };
     
-    _socket.onmessage = function(e) {
+    _socket.onmessage = async function(e) {
         const data = JSON.parse(e.data)
         console.log(data);
         switch (data.type) {
-            case 'roomlist':
-                setRoomLists(data.data)
+          case "roomlist":
+            setRoomLists(data.data);
+            break;
+          case "welcome":
+            const offer = await myPeerConnection.createOffer();
+            console.log(offer);
+            myPeerConnection.setLocalDescription(offer);
+            sendMessage(
+              JSON.stringify({
+                type: "offer",
+                roomname: data.roomname,
+                username: getUsername(),
+                userid: getUserID(),
+                offer: offer,
+              })
+            );
+            break;
+            case "offer":
+                myPeerConnection.setRemoteDescription(data.offer);
+                const answer = await myPeerConnection.createAnswer();
+                myPeerConnection.setLocalDescription(answer);
+                sendMessage(JSON.stringify({
+                    type:"answer",
+                    answer: answer,
+                    roomname: data.roomname
+                }))
                 break;
-            case 'message':
-                console.log(data)
-                setChats(data.text)
+            case "answer":
+                console.log("clientAnswer")
+                console.log(data.answer);
+                myPeerConnection.setRemoteDescription(data.answer);
                 break;
-            default:
-                console.log("Can't match Data type")
-                break;
-
+          // case 'message':
+          //     console.log(data)
+          //     setChats(data.text)
+          //     break;
+          default:
+            console.log("Can't match Data type");
+            break;
         }
     };
 }

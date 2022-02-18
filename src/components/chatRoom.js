@@ -3,10 +3,9 @@ import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { sendMessage } from "../network/websocket";
 import { getUserID, getUsername } from "../Utils/auth";
-
 import ChatForm from "./chatForm";
 
-export let setChats = () => {};
+export let myPeerConnection;
 
 export default function Main() {
   const [chatlists, setChatlists] = useState([]);
@@ -26,15 +25,29 @@ export default function Main() {
   }
 
   useEffect(() => {
-    sendMessage(JSON.stringify({
-      type: "join",
-      userid: getUserID(),
-      username: getUsername(),
-      roomname: roomname
-    }))
-    setChats = (data) => {
-      setChatlists(prev => [...prev, data]);
-    }
+    myPeerConnection = new RTCPeerConnection();
+    let dc = myPeerConnection.createDataChannel("chat channel");
+
+    dc.onmessage = function (event) {
+      console.log("received: " + event.data);
+    };
+
+    dc.onopen = function () {
+      console.log("datachannel open");
+    };
+
+    dc.onclose = function () {
+      console.log("datachannel close");
+    };
+
+    sendMessage(
+      JSON.stringify({
+        type: "join_room",
+        userid: getUserID(),
+        username: getUsername(),
+        roomname: roomname,
+      })
+    );
   }, []);
 
   return (
