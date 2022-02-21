@@ -5,6 +5,8 @@ import { getUsername, getUserID } from "../Utils/auth"
 
 
 let _socket;
+export let dataChannel;
+
 
 export async function InitSocket() {
     _socket = new W3CWebSocket('ws://localhost:8080/', 'echo-protocol');
@@ -28,15 +30,18 @@ export async function InitSocket() {
     
     _socket.onmessage = async function(e) {
         const data = JSON.parse(e.data)
-        console.log(data);
         switch (data.type) {
           case "roomlist":
             setRoomLists(data.data);
             break;
           case "welcome":
-            console.log("client:welcome")
+            dataChannel = myPeerConnection.createDataChannel("chat");
+            dataChannel.addEventListener("message", (e) => {
+                console.log("hostDataChannel")
+                setChats(e.data);
+            });
             const offer = await myPeerConnection.createOffer();
-            console.log(offer);
+            console.log("create offer", offer);
             myPeerConnection.setLocalDescription(offer);
             sendMessage(
               {
@@ -49,11 +54,19 @@ export async function InitSocket() {
             );
             break;
             case "offer":
-                console.log("client:offer");
-                console.log(data.offer);
+                
+                myPeerConnection.addEventListener("datachannel", (event) => {
+                    dataChannel = event.channel;
+                    dataChannel.addEventListener("message", (e) =>{
+                        console.log("remoteChannel")
+                        setChats(e.data)
+                    }
+                    );
+                  });
+                console.log("get remote Peer Offer", data.offer);
                 myPeerConnection.setRemoteDescription(data.offer);
                 const answer = await myPeerConnection.createAnswer();
-                console.log(answer);
+                console.log("create answer", answer);
                 myPeerConnection.setLocalDescription(answer);
                 sendMessage({
                     type:"answer",
@@ -64,9 +77,12 @@ export async function InitSocket() {
                 })
                 break;
             case "answer":
-                console.log("client:Answer")
-                console.log(data.answer);
+                console.log("get remote Peer Answer", data.answer);
                 myPeerConnection.setRemoteDescription(data.answer);
+                break;
+            case "ice":
+                console.log("received candidate", data.candidate);
+                myPeerConnection.addIceCandidate(data.candidate);
                 break;
           // case 'message':
           //     console.log(data)

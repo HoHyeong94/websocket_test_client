@@ -6,6 +6,8 @@ import { getUserID, getUsername } from "../Utils/auth";
 import ChatForm from "./chatForm";
 
 export let myPeerConnection;
+export let peers = [];
+export let setChats = () => {};
 
 export default function Main() {
   const [chatlists, setChatlists] = useState([]);
@@ -24,23 +26,41 @@ export default function Main() {
     history.goBack();
   }
 
+  function handleIce(data) {
+    console.log("handleIce called");
+    // console.log("handleIce called", data);
+
+    sendMessage({
+      type: "ice",
+      candidate: data.candidate,
+      roomname: roomname,
+      userid: getUserID(),
+      username: getUsername(),
+    })
+  }
+
   useEffect(() => {
     if (!myPeerConnection) {
-      myPeerConnection = new RTCPeerConnection();
+      myPeerConnection = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: [
+              "stun:stun.l.google.com:19302",
+              // "stun:stun1.l.google.com:19302",
+              // "stun:stun2.l.google.com:19302",
+              // "stun:stun3.l.google.com:19302",
+              // "stun:stun4.l.google.com:19302",
+            ],
+          },
+        ],
+      });
     }
-    let dc = myPeerConnection.createDataChannel("chat channel");
-
-    dc.onmessage = function (event) {
-      console.log("received: " + event.data);
-    };
-
-    dc.onopen = function () {
-      console.log("datachannel open");
-    };
-
-    dc.onclose = function () {
-      console.log("datachannel close");
-    };
+    myPeerConnection.addEventListener("icecandidate", handleIce);
+    peers.push({
+      username: getUsername(),
+      userid: getUserID(),
+      peer: myPeerConnection
+    })
 
     sendMessage(
       {
@@ -50,6 +70,9 @@ export default function Main() {
         roomname: roomname,
       }
     );
+    setChats = (data) => {
+      setChatlists(prev => [...prev, data]);
+    }
   }, []);
 
   return (
