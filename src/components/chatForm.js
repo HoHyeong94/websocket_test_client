@@ -8,13 +8,13 @@ function App({ roomname }) {
 
   function sendMsg() {
     sendMessage(
-      JSON.stringify({
+      {
         type: "message",
         userid: getUserID(),
         username: getUsername(),
         roomname: roomname,
         text: inputRef.current.value,
-      })
+      }
     );
   }
 

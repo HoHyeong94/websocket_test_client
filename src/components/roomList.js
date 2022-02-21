@@ -13,24 +13,27 @@ export default function RoomList() {
 
   function createRoom() {
     const data = Object.fromEntries(new FormData(formRef.current));
-    sendMessage(JSON.stringify({
+    sendMessage({
       type: "createroom",
       id: getUserID(),
       username: getUsername(),
       roomname: data.roomname,
-    }))
+    })
     document.getElementById("createRoomName").value = null;
   }
 
   useEffect(() => {
-    sendMessage(JSON.stringify({
+    sendMessage({
       type: "roomlist",
       // userid: getUserID(),
       // username: getUsername(),
-    }))
+    })
 
     setRoomLists = (data) => {
       setRooms(data);
+    }
+    return () => {
+      setRooms([]);
     }
   }, []);
 

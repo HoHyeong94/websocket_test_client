@@ -15,11 +15,11 @@ export async function InitSocket() {
     
     _socket.onopen = function() {
         console.log('WebSocket Client Connected');
-        sendMessage(JSON.stringify({
+        sendMessage({
             type: "init",
             username: getUsername(),
             userid: getUserID()
-          }))
+          })
     };
     
     _socket.onclose = function() {
@@ -34,31 +34,37 @@ export async function InitSocket() {
             setRoomLists(data.data);
             break;
           case "welcome":
+            console.log("client:welcome")
             const offer = await myPeerConnection.createOffer();
             console.log(offer);
             myPeerConnection.setLocalDescription(offer);
             sendMessage(
-              JSON.stringify({
+              {
                 type: "offer",
                 roomname: data.roomname,
                 username: getUsername(),
                 userid: getUserID(),
                 offer: offer,
-              })
+              }
             );
             break;
             case "offer":
+                console.log("client:offer");
+                console.log(data.offer);
                 myPeerConnection.setRemoteDescription(data.offer);
                 const answer = await myPeerConnection.createAnswer();
+                console.log(answer);
                 myPeerConnection.setLocalDescription(answer);
-                sendMessage(JSON.stringify({
+                sendMessage({
                     type:"answer",
                     answer: answer,
-                    roomname: data.roomname
-                }))
+                    roomname: data.roomname,
+                    username: getUsername(),
+                    userid: getUserID(),
+                })
                 break;
             case "answer":
-                console.log("clientAnswer")
+                console.log("client:Answer")
                 console.log(data.answer);
                 myPeerConnection.setRemoteDescription(data.answer);
                 break;
@@ -79,7 +85,11 @@ export function getSocket() {
 
 export function sendMessage(data) {
     if (_socket.readyState === _socket.OPEN) {
-        _socket.send(data);
+        if (typeof data === String) {
+            _socket.send(data);
+        } else {
+            _socket.send(JSON.stringify(data));
+        }
     }
 }
 

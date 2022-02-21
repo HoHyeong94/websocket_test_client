@@ -14,18 +14,20 @@ export default function Main() {
 
   function sendExit() {
     sendMessage(
-      JSON.stringify({
+      {
         type: "exit",
         userid: getUserID(),
         username: getUsername(),
         roomname: roomname,
-      })
+      }
     );
     history.goBack();
   }
 
   useEffect(() => {
-    myPeerConnection = new RTCPeerConnection();
+    if (!myPeerConnection) {
+      myPeerConnection = new RTCPeerConnection();
+    }
     let dc = myPeerConnection.createDataChannel("chat channel");
 
     dc.onmessage = function (event) {
@@ -41,12 +43,12 @@ export default function Main() {
     };
 
     sendMessage(
-      JSON.stringify({
+      {
         type: "join_room",
         userid: getUserID(),
         username: getUsername(),
         roomname: roomname,
-      })
+      }
     );
   }, []);
 
