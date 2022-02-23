@@ -1,5 +1,5 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { setChats, myPeerConnection } from "../components/chatRoom";
+import { setChats } from "../components/chatRoom";
 import { setRoomLists } from "../components/roomList"
 import { getUsername, getUserID } from "../Utils/auth"
 
@@ -31,8 +31,6 @@ function createPeerConnection(userid, username, roomname) {
         username: username,
         sendUsername: getUsername(),
         sendUserid: getUserID()
-        // receiveID: userid,
-        // receiveusername: username
       })
     }
     return pc;
@@ -110,7 +108,6 @@ export async function InitSocket() {
           setRoomLists(data.data);
           break;
         case "offer":
-          // let pc = pcs.get(data.userid).peerconnection
           console.log("clientOffer called");
           const pc2 = createPeerConnection(
             data.offerUserid,
@@ -134,7 +131,6 @@ export async function InitSocket() {
           dataChannels.push(dataChannel2);
           pc2.addEventListener("datachannel", (event) => {
             let dataChannel = event.channel;
-            // dataChannels.push(dataChannel);
             dataChannel.addEventListener("message", (e) => {
               console.log("remoteChannel");
               setChats(e.data);
@@ -172,7 +168,7 @@ export async function InitSocket() {
           break;
         case "ice":
           console.log("received candidate");
-          //   if (data.userid === getUserID()) return;
+          
           pcs
             .get(data.sendUserid)
             .peerconnection.addIceCandidate(data.candidate);

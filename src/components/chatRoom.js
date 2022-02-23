@@ -26,14 +26,6 @@ export default function Main() {
   }
 
   useEffect(() => {
-    // sendMessage(
-    //   {
-    //     type: "join_room",
-    //     userid: getUserID(),
-    //     username: getUsername(),
-    //     roomname: roomname,
-    //   }
-    // );
     sendMessage({
       type: "all_users",
       username: getUsername(),

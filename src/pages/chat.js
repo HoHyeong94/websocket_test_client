@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Route, Switch } from "react-router-dom";
-import { sendMessage } from "../network/websocket";
-import { userInfoStore } from "../Utils/auth";
 import RoomList from "../components/roomList";
 import ChatRoom from "../components/chatRoom";
 
