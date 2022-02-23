@@ -7,6 +7,7 @@ import ChatForm from "./chatForm";
 
 export let myPeerConnection;
 export let setChats = () => {};
+export let myStream;
 
 export default function Main() {
   const [chatlists, setChatlists] = useState([]);
@@ -25,12 +26,27 @@ export default function Main() {
     history.goBack();
   }
 
+  async function getMedia() {
+    try {
+        myStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false,
+        })
+        console.log(myStream)
+        console.log(myStream.getAudioTracks())
+    } catch (e) {
+        console.log(e)
+    }
+
+}
   useEffect(() => {
-    sendMessage({
-      type: "all_users",
-      username: getUsername(),
-      userid: getUserID(),
-      roomname: roomname
+    getMedia().then(() => {
+      sendMessage({
+        type: "all_users",
+        username: getUsername(),
+        userid: getUserID(),
+        roomname: roomname
+      })
     })
     setChats = (data) => {
       setChatlists(prev => [...prev, data]);

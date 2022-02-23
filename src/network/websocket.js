@@ -1,5 +1,5 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { setChats } from "../components/chatRoom";
+import { myStream, setChats } from "../components/chatRoom";
 import { setRoomLists } from "../components/roomList"
 import { getUsername, getUserID } from "../Utils/auth"
 
@@ -33,9 +33,12 @@ function createPeerConnection(userid, username, roomname) {
         sendUserid: getUserID()
       })
     }
+    console.log(myStream);
+    myStream.getTracks().forEach((track) => {
+        pc.addTrack(track, myStream)
+    })
     return pc;
-  }
-
+}
 
 export async function InitSocket() {
     _socket = new W3CWebSocket('ws://localhost:8080/', 'echo-protocol');
@@ -168,7 +171,7 @@ export async function InitSocket() {
           break;
         case "ice":
           console.log("received candidate");
-          
+
           pcs
             .get(data.sendUserid)
             .peerconnection.addIceCandidate(data.candidate);
