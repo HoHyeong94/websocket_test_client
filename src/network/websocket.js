@@ -1,5 +1,5 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { myStream, setChats } from "../components/chatRoom";
+import { myStream, setChats, peerAudioRef, setPeers } from "../components/chatRoom";
 import { setRoomLists } from "../components/roomList"
 import { getUsername, getUserID } from "../Utils/auth"
 
@@ -33,13 +33,23 @@ function createPeerConnection(userid, username, roomname) {
         sendUserid: getUserID()
       })
     }
-    console.log(myStream);
+    pc.addEventListener("addstream", handleAddStream);
+    
     if (!!myStream) {
         myStream.getTracks().forEach((track) => {
             pc.addTrack(track, myStream)
         })
     }
     return pc;
+}
+
+function handleAddStream(data) {
+    console.log("addStream")
+    // peerAudioRef.current.srcObject = data.stream;
+    // let tmp = setPeers(data);
+    setPeers(data);
+    // console.log(tmp);
+    // document.getElementById(tmp.userid).srcObject = data.stream;
 }
 
 export async function InitSocket() {
@@ -80,7 +90,6 @@ export async function InitSocket() {
               user.username,
               user.roomname
             );
-            console.log(user.userid);
 
             pcs.set(user.userid, {
               userid: user.userid,
@@ -96,7 +105,7 @@ export async function InitSocket() {
             });
             dataChannels.push(dataChannel);
             const localSdp = await pc.createOffer();
-            console.log("create offer", localSdp);
+            console.log("create offer");
             await pc.setLocalDescription(localSdp);
             sendMessage({
               type: "offer",
@@ -132,7 +141,7 @@ export async function InitSocket() {
             console.log("hostDataChannel");
             setChats(e.data);
           });
-          console.log(dataChannel2);
+          
           dataChannels.push(dataChannel2);
           pc2.addEventListener("datachannel", (event) => {
             let dataChannel = event.channel;
@@ -160,8 +169,7 @@ export async function InitSocket() {
           });
           break;
         case "answer":
-          console.log("get remote Peer Answer", data.answer);
-          console.log(pcs);
+          console.log("get remote Peer Answer");
           pcs
             .get(data.userid)
             .peerconnection.addEventListener("datachannel", (event) => {
