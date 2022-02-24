@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Button, TextField } from "@mui/material";
 import { dataChannels, pcs } from "../network/websocket";
+import { setChats } from "./chatRoom";
 
 
 function App({ roomname }) {
@@ -9,13 +10,14 @@ function App({ roomname }) {
   function sendMsg() {
     console.log("Datasend")
     console.log(dataChannels);
+    setChats(inputRef.current.value)
     dataChannels.forEach(pc => {
       if (pc.readyState === "open") {
         pc.send(inputRef.current.value)
       }
     })
   }
-
+  
   function checkPcs() {
     console.log(pcs);
   }

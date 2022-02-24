@@ -28,19 +28,29 @@ export default function Main() {
 
   async function getMedia() {
     try {
-        myStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: false,
-        })
-        console.log(myStream)
-        console.log(myStream.getAudioTracks())
+      myStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
     } catch (e) {
-        console.log(e)
+      console.log(e);
     }
+  }
 
-}
+  // async function getAudios() {
+  //   try{
+  //     const devices = await navigator.mediaDevices.enumerateDevices();
+  //     console.log(devices);
+  //     const audios = devices.filter(device => device.kind === "audioinput")
+  //     console.log(audios);
+  //   } catch(e) {
+  //     console.log(e);
+  //   }
+  // }
+
   useEffect(() => {
     getMedia().then(() => {
+      // getAudios()
       sendMessage({
         type: "all_users",
         username: getUsername(),

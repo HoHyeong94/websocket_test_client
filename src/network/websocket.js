@@ -34,9 +34,11 @@ function createPeerConnection(userid, username, roomname) {
       })
     }
     console.log(myStream);
-    myStream.getTracks().forEach((track) => {
-        pc.addTrack(track, myStream)
-    })
+    if (!!myStream) {
+        myStream.getTracks().forEach((track) => {
+            pc.addTrack(track, myStream)
+        })
+    }
     return pc;
 }
 
@@ -117,7 +119,7 @@ export async function InitSocket() {
             data.offerUsername,
             data.roomname
           );
-         
+
           pcs.set(data.offerUserid, {
             userid: data.offerUserid,
             username: data.offerUsername,
@@ -160,13 +162,15 @@ export async function InitSocket() {
         case "answer":
           console.log("get remote Peer Answer", data.answer);
           console.log(pcs);
-          pcs.get(data.userid).peerconnection.addEventListener("datachannel", (event) => {
-            let dataChannel = event.channel;
-            dataChannel.addEventListener("message", (e) => {
-              console.log("remoteChannel");
-              setChats(e.data);
+          pcs
+            .get(data.userid)
+            .peerconnection.addEventListener("datachannel", (event) => {
+              let dataChannel = event.channel;
+              dataChannel.addEventListener("message", (e) => {
+                console.log("remoteChannel");
+                setChats(e.data);
+              });
             });
-          });
           pcs.get(data.userid).peerconnection.setRemoteDescription(data.answer);
           break;
         case "ice":
@@ -175,6 +179,17 @@ export async function InitSocket() {
           pcs
             .get(data.sendUserid)
             .peerconnection.addIceCandidate(data.candidate);
+          break;
+        case "exit":
+          if (data.userid === getUserID()) {
+            for (const [key, value] of pcs) {
+              value.peerconnection.close();
+              pcs.delete(key);
+            }
+          } else {
+            pcs.get(data.userid).peerconnection.close();
+            pcs.delete(data.userid);
+          }
           break;
         default:
           console.log("Can't match Data type");
