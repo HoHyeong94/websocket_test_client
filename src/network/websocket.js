@@ -47,7 +47,8 @@ function handleAddStream(data) {
     console.log("addStream")
     // peerAudioRef.current.srcObject = data.stream;
     // let tmp = setPeers(data);
-    setPeers(data);
+    setTimeout(() => {setPeers(data)}, 50)
+    // setPeers(data);
     // console.log(tmp);
     // document.getElementById(tmp.userid).srcObject = data.stream;
 }

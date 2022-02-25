@@ -62,7 +62,12 @@ export default function Main() {
     }
     setPeers = (data) => {
       console.log("setAudioChannels")
-      console.log(data);
+      console.log(data.currentTarget.localDescription);
+      for (const [key, value] of pcs) {
+        console.log(value.peerconnection.currentLocalDescription)
+      }
+      console.log(pcs);
+     
       setAudioChannel(prev => [...prev, {username: "peer audio", id: data.stream.id}])
       document.getElementById(data.stream.id).srcObject = data.stream
     }
