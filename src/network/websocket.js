@@ -1,5 +1,5 @@
 import { w3cwebsocket as W3CWebSocket } from "websocket";
-import { myStream, setChats, peerAudioRef, setPeers } from "../components/chatRoom";
+import { myStream, setChats, setEnterPeerList, deleteDisconnectedPeer } from "../components/chatRoom";
 import { setRoomLists } from "../components/roomList"
 import { getUsername, getUserID } from "../Utils/auth"
 
@@ -44,13 +44,11 @@ function createPeerConnection(userid, username, roomname) {
 }
 
 function handleAddStream(data) {
-    console.log("addStream")
-    // peerAudioRef.current.srcObject = data.stream;
-    // let tmp = setPeers(data);
-    setTimeout(() => {setPeers(data)}, 50)
-    // setPeers(data);
-    // console.log(tmp);
-    // document.getElementById(tmp.userid).srcObject = data.stream;
+    setTimeout(() => {
+      setEnterPeerList(data).then(() => {
+        document.getElementById(data.stream.id).srcObject = data.stream;
+      });
+    }, 50);
 }
 
 export async function InitSocket() {
@@ -194,10 +192,12 @@ export async function InitSocket() {
             for (const [key, value] of pcs) {
               value.peerconnection.close();
               pcs.delete(key);
+              deleteDisconnectedPeer(key);
             }
           } else {
             pcs.get(data.userid).peerconnection.close();
             pcs.delete(data.userid);
+            deleteDisconnectedPeer(data.userid);
           }
           break;
         default:
