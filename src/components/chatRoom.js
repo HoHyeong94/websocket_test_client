@@ -1,6 +1,9 @@
-import { Button, ButtonGroup, List, ListItem, ListItemText, Chip } from "@mui/material";
+import { List, ListItem, ListItemText, Chip, Slider, Stack } from "@mui/material";
 import { Box } from "@mui/system";
+import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
+import VolumeDown from '@mui/icons-material/VolumeDown';
+import VolumeUp from '@mui/icons-material/VolumeUp';
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { sendMessage, pcs } from "../network/websocket";
@@ -16,7 +19,7 @@ export let myStream;
 
 export default function Main() {
   const [chatlists, setChatlists] = useState([]);
-  const [audioChannel, setAudioChannel] = useState([]);
+  const [channel, setChannel] = useState([]);
   const { roomname } = useParams();
 
   async function getMedia() {
@@ -25,8 +28,6 @@ export default function Main() {
         audio: true,
         video: false,
       });
-      console.log("myStream")
-      console.log(myStream);
     } catch (e) {
       console.log(e);
     }
@@ -35,40 +36,40 @@ export default function Main() {
   function handleAudioPlay(id, isPlayed) {
     if (isPlayed) {
       document.getElementById(id).pause();
-      setAudioChannel((prev) => {
+      setChannel((prev) => {
         prev.map(e => {
           if (e.audioid === id) {
             e.isPlayed = !e.isPlayed
           }
           return e;
         })
-        return prev; 
+        return [...prev]; 
       })
     } else {
       document.getElementById(id).play();
-      setAudioChannel((prev) => {
+      setChannel((prev) => {
         prev.map(e => {
           if (e.audioid === id) {
-            console.log("called")
             e.isPlayed = !e.isPlayed
           }
           return e;
         })
-        return prev; 
+        return [...prev]; 
       })
     }
   }
 
-  function handleAudioPause(id) {
-    document.getElementById(id).pause();
-  }
-
-  function handleAudioVolumeUp(id) {
-    document.getElementById(id).volume += 0.1;
-  }
-
-  function handleAudioVolumeDown(id) {
-    document.getElementById(id).volume -= 0.1;
+  function handleAudioVolume(event, newValue, id) { 
+    setChannel((prev) => {
+      prev.map(e => {
+        if (e.audioid === id) {
+          e.volume = newValue === 0 ? 0 : newValue / 100;
+        }
+        return e;
+      }) 
+      return [...prev];
+    })
+    document.getElementById(id).volume = newValue === 0 ? 0 : newValue / 100;
   }
 
   useEffect(() => {
@@ -80,48 +81,62 @@ export default function Main() {
           userid: getUserID(),
           roomname: roomname,
         });
-        setAudioChannel((prev) => [
+        setChannel((prev) => [
           ...prev,
           {
             username: getUsername(),
             userid: getUserID(),
-            audioid: myStream.id,
+            audioid: !!myStream ? myStream.id : null,
+            volume: 0.5,
             isPlayed: false
           },
         ]);
       })
       .then(() => {
-        document.getElementById(myStream.id).srcObject = myStream;
+        if (!!myStream) {
+          document.getElementById(myStream.id).srcObject = myStream;
+        }
       });
 
     setChats = (data) => {
       setChatlists((prev) => [...prev, data]);
     };
 
-    setEnterPeerList = async (data) => {
-      console.log("setConnectedPeer");
-      for (const [key, value] of pcs) {
-        if (
-          data.currentTarget.localDescription ===
-          value.peerconnection.currentLocalDescription
-        ) {
-          setAudioChannel((prev) => [
-            ...prev,
-            {
-              username: value.username,
-              userid: value.userid,
-              audioid: data.stream.id,
-              isPlayed: false
-            },
-          ]);
-          return;
+    setEnterPeerList = async (data, mode = false) => {
+      if (mode === "audio") {
+        for (const [key, value] of pcs) {
+          if (
+            data.currentTarget.localDescription ===
+            value.peerconnection.currentLocalDescription
+          ) {
+            setChannel((prev) => {
+              prev.map((e) => {
+                if (e.userid === key) {
+                  e.audioid = data.stream.id;
+                }
+                return e;
+              });
+              return [...prev];
+            });
+          }
         }
+      } else {
+        setChannel((prev) => [
+          ...prev,
+          {
+            username: data.username,
+            userid: data.userid,
+            volume: data.volume,
+            audioid: null,
+            isPlayed: false,
+          }
+        ])
       }
       return data;
     };
 
     deleteDisconnectedPeer = (id) => {
-      setAudioChannel((prev) => {
+      setChannel((prev) => {
         return prev.filter((e) => e.userid !== id);
       });
     };
@@ -129,7 +144,7 @@ export default function Main() {
 
   return (
     <>
-      <Box sx={{ position: "fixed", width: "80%", left: "30%", height: "80%" }}>
+      <Box sx={{ position: "fixed", width: "80%", left: "20%", height: "80%" }}>
         <List>
           {chatlists.map((data, index) => {
             return (
@@ -144,29 +159,36 @@ export default function Main() {
         sx={{ position: "fixed", width: "20%", height: "100%", borderRight: 1 }}
       >
         <List>
-          {audioChannel.map((data, index) => {
+          {channel.map((data, index) => {
             return (
               <ListItem key={index}>
+                {data.audioid ? (
+                  <audio id={data.audioid} />
+                ) : (
+                  <React.Fragment />
+                )}
+                <Stack direction="row" spacing={1}>
+                  
                 <Chip
                   label={data.username}
+                  size="small"
+                  disabled={!data.audioid ? true : false}
                   onClick={() => handleAudioPlay(data.audioid, data.isPlayed)}
                 />
-                {data.isPlayed ? <React.Fragment /> : <MicOffIcon />}
-                <audio id={data.audioid}></audio>
-                <ButtonGroup variant="outlined">
-                  {/* <Button onClick={() => handleAudioPlay(data.audioid)}>
-                    Play
-                  </Button>
-                  <Button onClick={() => handleAudioPause(data.audioid)}>
-                    Pause
-                  </Button> */}
-                  <Button onClick={() => handleAudioVolumeUp(data.audioid)}>
-                    Vol +
-                  </Button>
-                  <Button onClick={() => handleAudioVolumeDown(data.audioid)}>
-                    Vol -
-                  </Button>
-                </ButtonGroup>
+                </Stack>
+                {data.isPlayed ? <MicIcon /> : <MicOffIcon />}
+                <VolumeDown />
+                <Slider
+                  size="small"
+                  min={0}
+                  max={100}
+                  disabled={!data.isPlayed ? true : false}
+                  value={data.volume * 100}
+                  onChange={(event, value) =>
+                    handleAudioVolume(event, value, data.audioid)
+                  }
+                />
+                <VolumeUp />
               </ListItem>
             );
           })}

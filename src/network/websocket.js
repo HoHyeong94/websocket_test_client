@@ -22,7 +22,6 @@ function createPeerConnection(userid, username, roomname) {
     const pc = new RTCPeerConnection(pc_config)
 
     pc.onicecandidate = (e) => {
-      console.log('onicecandidate');
       sendMessage({
         type: "ice",
         candidate: e.candidate,
@@ -45,10 +44,10 @@ function createPeerConnection(userid, username, roomname) {
 
 function handleAddStream(data) {
     setTimeout(() => {
-      setEnterPeerList(data).then(() => {
+      setEnterPeerList(data, "audio").then(() => {
         document.getElementById(data.stream.id).srcObject = data.stream;
       });
-    }, 50);
+    }, 100);
 }
 
 export async function InitSocket() {
@@ -97,6 +96,15 @@ export async function InitSocket() {
               peerconnection: pc,
             });
 
+            let tmp = {
+              userid: user.userid,
+              username: user.username,
+              roomname: user.roomname,
+              volume: 0.5
+            }
+
+            setEnterPeerList(tmp);
+
             let dataChannel = pc.createDataChannel(user.username);
             dataChannel.addEventListener("message", (e) => {
               console.log("hostDataChannel");
@@ -127,13 +135,21 @@ export async function InitSocket() {
             data.offerUsername,
             data.roomname
           );
-
+          let tmp = {
+            userid: data.offerUserid,
+            username: data.offerUsername,
+            roomname: data.roomname,
+            volume: 0.5
+          };
+          
           pcs.set(data.offerUserid, {
             userid: data.offerUserid,
             username: data.offerUsername,
             roomname: data.roomname,
             peerconnection: pc2,
           });
+
+          setEnterPeerList(tmp);
 
           let dataChannel2 = pc2.createDataChannel(data.offerUsername);
           dataChannel2.addEventListener("message", (e) => {
@@ -182,7 +198,6 @@ export async function InitSocket() {
           break;
         case "ice":
           console.log("received candidate");
-
           pcs
             .get(data.sendUserid)
             .peerconnection.addIceCandidate(data.candidate);
