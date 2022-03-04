@@ -75,7 +75,7 @@ export default function Main() {
     getMedia()
       .then(() => {
         sendMessage({
-          type: "all_users",
+          type: "connected_users",
           username: getUsername(),
           userid: getUserID(),
           roomname: roomname,

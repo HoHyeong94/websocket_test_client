@@ -5,7 +5,6 @@ import { getUsername, getUserID } from "../Utils/auth"
 
 
 export let dataChannels = [];
-export let allUsers;
 export let pcs = new Map();
 
 let _socket;
@@ -26,10 +25,10 @@ function createPeerConnection(userid, username, roomname) {
         type: "ice",
         candidate: e.candidate,
         roomname: roomname,
-        userid: userid,
-        username: username,
-        sendUsername: getUsername(),
-        sendUserid: getUserID()
+        remoteUserid: userid,
+        remoteUsername: username,
+        localUsername: getUsername(),
+        localUserid: getUserID()
       })
     }
     pc.addEventListener("addstream", handleAddStream);
@@ -78,8 +77,8 @@ export async function InitSocket() {
     _socket.onmessage = async function (e) {
       const data = JSON.parse(e.data);
       switch (data.type) {
-        case "all_users":
-          allUsers = data.data.filter((e) => e.userid !== getUserID());
+        case "connected_users":
+          let allUsers = data.connectedUsers.filter((e) => e.userid !== getUserID());
           console.log("users:", allUsers);
 
           allUsers.forEach(async (user) => {
@@ -96,14 +95,12 @@ export async function InitSocket() {
               peerconnection: pc,
             });
 
-            let tmp = {
+            setEnterPeerList({
               userid: user.userid,
               username: user.username,
               roomname: user.roomname,
               volume: 0.5
-            }
-
-            setEnterPeerList(tmp);
+            });
 
             let dataChannel = pc.createDataChannel(user.username);
             dataChannel.addEventListener("message", (e) => {
@@ -117,10 +114,10 @@ export async function InitSocket() {
             sendMessage({
               type: "offer",
               roomname: user.roomname,
-              sendUsername: getUsername(),
-              sendUserid: getUserID(),
-              username: user.username,
-              userid: user.userid,
+              localUsername: getUsername(),
+              localUserid: getUserID(),
+              remoteUsername: user.username,
+              remoteUserid: user.userid,
               offer: localSdp,
             });
           });
@@ -131,27 +128,26 @@ export async function InitSocket() {
         case "offer":
           console.log("clientOffer called");
           const pc2 = createPeerConnection(
-            data.offerUserid,
-            data.offerUsername,
+            data.remoteUserid,
+            data.remoteUsername,
             data.roomname
           );
-          let tmp = {
-            userid: data.offerUserid,
-            username: data.offerUsername,
-            roomname: data.roomname,
-            volume: 0.5
-          };
           
-          pcs.set(data.offerUserid, {
-            userid: data.offerUserid,
-            username: data.offerUsername,
+          pcs.set(data.remoteUserid, {
+            userid: data.remoteUserid,
+            username: data.remoteUsername,
             roomname: data.roomname,
             peerconnection: pc2,
           });
 
-          setEnterPeerList(tmp);
+          setEnterPeerList({
+            userid: data.remoteUserid,
+            username: data.remoteUsername,
+            roomname: data.roomname,
+            volume: 0.5
+          });
 
-          let dataChannel2 = pc2.createDataChannel(data.offerUsername);
+          let dataChannel2 = pc2.createDataChannel(data.remoteUsername);
           dataChannel2.addEventListener("message", (e) => {
             console.log("hostDataChannel");
             setChats(e.data);
@@ -172,21 +168,22 @@ export async function InitSocket() {
           pc2.setLocalDescription(answer);
 
           console.log("create answer", answer);
+          
 
           sendMessage({
             type: "answer",
             answer: answer,
             roomname: data.roomname,
-            sendUsername: data.offerUsername,
-            sendUserid: data.offerUserid,
-            username: data.username,
-            userid: data.userid,
+            remoteUsername: data.remoteUsername,
+            remoteUserid: data.remoteUserid,
+            localUsername: getUsername(),
+            localUserid: getUserID(),
           });
           break;
         case "answer":
           console.log("get remote Peer Answer");
           pcs
-            .get(data.userid)
+            .get(data.remoteUserid)
             .peerconnection.addEventListener("datachannel", (event) => {
               let dataChannel = event.channel;
               dataChannel.addEventListener("message", (e) => {
@@ -194,12 +191,12 @@ export async function InitSocket() {
                 setChats(e.data);
               });
             });
-          pcs.get(data.userid).peerconnection.setRemoteDescription(data.answer);
+          pcs.get(data.remoteUserid).peerconnection.setRemoteDescription(data.answer);
           break;
         case "ice":
           console.log("received candidate");
           pcs
-            .get(data.sendUserid)
+            .get(data.remoteUserid)
             .peerconnection.addIceCandidate(data.candidate);
           break;
         case "exit":
