@@ -10,7 +10,6 @@ import { sendMessage, pcs } from "../network/websocket";
 import { getUserID, getUsername } from "../Utils/auth";
 import ChatForm from "./chatForm";
 
-export let myPeerConnection;
 export let setChats = () => {};
 export let setEnterPeerList = () => {};
 export let deleteDisconnectedPeer = () => {};

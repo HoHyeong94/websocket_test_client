@@ -25,8 +25,6 @@ export default function RoomList() {
   useEffect(() => {
     sendMessage({
       type: "roomlist",
-      // userid: getUserID(),
-      // username: getUsername(),
     })
 
     setRoomLists = (data) => {
