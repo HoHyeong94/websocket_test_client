@@ -105,7 +105,7 @@ export async function InitSocket() {
             let dataChannel = pc.createDataChannel(user.username);
             dataChannel.addEventListener("message", (e) => {
               console.log("hostDataChannel");
-              setChats(e.data);
+              setChats(JSON.parse(e.data));
             });
             dataChannels.push(dataChannel);
             const localSdp = await pc.createOffer();
@@ -150,7 +150,7 @@ export async function InitSocket() {
           let dataChannel2 = pc2.createDataChannel(data.remoteUsername);
           dataChannel2.addEventListener("message", (e) => {
             console.log("hostDataChannel");
-            setChats(e.data);
+            setChats(JSON.parse(e.data));
           });
           
           dataChannels.push(dataChannel2);
@@ -158,7 +158,7 @@ export async function InitSocket() {
             let dataChannel = event.channel;
             dataChannel.addEventListener("message", (e) => {
               console.log("remoteChannel");
-              setChats(e.data);
+              setChats(JSON.parse(e.data));
             });
           });
           console.log("get remote Peer Offer", data.offer);
@@ -188,7 +188,7 @@ export async function InitSocket() {
               let dataChannel = event.channel;
               dataChannel.addEventListener("message", (e) => {
                 console.log("remoteChannel");
-                setChats(e.data);
+                setChats(JSON.parse(e.data));
               });
             });
           pcs.get(data.remoteUserid).peerconnection.setRemoteDescription(data.answer);

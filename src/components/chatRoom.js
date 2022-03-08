@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemText, Chip, Slider, Stack } from "@mui/material";
+import { List, ListItem, Chip, Slider, Stack, Paper } from "@mui/material";
 import { Box } from "@mui/system";
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
@@ -9,11 +9,20 @@ import { useParams } from "react-router-dom";
 import { sendMessage, pcs } from "../network/websocket";
 import { getUserID, getUsername } from "../Utils/auth";
 import ChatForm from "./chatForm";
+import { styled } from "@mui/styles";
+import { MessageLeft, MessageRight } from "./message";
 
 export let setChats = () => {};
 export let setEnterPeerList = () => {};
 export let deleteDisconnectedPeer = () => {};
 export let myStream;
+
+const MessageBody = styled(Paper)({
+    width: "calc( 100% - 20px )",
+    margin: 4,
+    overflowY: "auto",
+    height: "100%"
+})
 
 
 export default function Main() {
@@ -96,6 +105,7 @@ export default function Main() {
           document.getElementById(myStream.id).srcObject = myStream;
         }
       });
+      console.log("chats", chatlists);
 
     setChats = (data) => {
       setChatlists((prev) => [...prev, data]);
@@ -143,17 +153,28 @@ export default function Main() {
 
   return (
     <>
-      <Box sx={{ position: "fixed", width: "80%", left: "20%", height: "80%" }}>
-        <List>
+      <div
+        style={{ position: "fixed", width: "80%", left: "20%", height: "80%" }}
+      >
+        <MessageBody>
           {chatlists.map((data, index) => {
-            return (
-              <ListItem key={index}>
-                <ListItemText primary={data} />
-              </ListItem>
+            return data.sender !== getUsername() ? (
+              <MessageLeft
+                key={index}
+                message={data.text}
+                timestamp={`${data.hour} : ${data.minutes}`}
+                displayName={data.sender}
+              />
+            ) : (
+              <MessageRight
+                key={index}
+                message={data.text}
+                timestamp={`${data.hour} : ${data.minutes}`}
+              />
             );
           })}
-        </List>
-      </Box>
+        </MessageBody>
+      </div>
       <Box
         sx={{ position: "fixed", width: "20%", height: "100%", borderRight: 1 }}
       >
@@ -167,13 +188,12 @@ export default function Main() {
                   <React.Fragment />
                 )}
                 <Stack direction="row" spacing={1}>
-                  
-                <Chip
-                  label={data.username}
-                  size="small"
-                  disabled={!data.audioid ? true : false}
-                  onClick={() => handleAudioPlay(data.audioid, data.isPlayed)}
-                />
+                  <Chip
+                    label={data.username}
+                    size="small"
+                    disabled={!data.audioid ? true : false}
+                    onClick={() => handleAudioPlay(data.audioid, data.isPlayed)}
+                  />
                 </Stack>
                 {data.isPlayed ? <MicIcon /> : <MicOffIcon />}
                 <VolumeDown />

@@ -11,10 +11,17 @@ function App({ roomname }) {
   const history = useHistory()
 
   function sendMsg() {
-    setChats(`${getUsername()}: ${inputRef.current.value}`)
+    const date = new Date();
+    let msg = {
+      sender: getUsername(),
+      text: inputRef.current.value,
+      hour: date.getHours(),
+      minutes: date.getMinutes(),
+    };
+    setChats(msg)
     dataChannels.forEach(pc => {
       if (pc.readyState === "open") {
-        pc.send(`${getUsername()}: ${inputRef.current.value}`)
+        pc.send(JSON.stringify(msg))
       }
     })
     inputRef.current.value = "";
